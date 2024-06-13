@@ -1,15 +1,45 @@
 package com.example.postcrossingbackend.controller;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.BufferedOutputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 @RestController
-@RequestMapping("/sayHello")
+@RequestMapping("/postcard")
 public class ExampleController {
 
-    @GetMapping
+    @GetMapping("/sayHello")
     public BaseResponse sayHello() {
-        return new BaseResponse(200, "Hello everyone");
+        return new BaseResponse("Success", "Hello everyone");
+    }
+
+    @PostMapping("/uploadImage")
+    public BaseResponse uploadFile(@RequestPart("file") MultipartFile file) {
+//        try {
+//            File convertFile = new File(
+//                    new File("src/main/resources/static/images").getAbsolutePath(),
+//                    file.getOriginalFilename()
+//            );
+//
+//            try (FileOutputStream fos = new FileOutputStream(convertFile)) {
+//                IOUtils.copy(file.getInputStream(), fos);
+//            }
+
+        Path uploadPath = Paths.get("src/main/resources/static/images");
+        Path filePath = uploadPath.resolve(file.getOriginalFilename());
+
+        try (BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(filePath.toFile()))) {
+            bos.write(file.getBytes());
+            bos.flush();
+
+            return new BaseResponse("Success", "The file was saved successfully");
+        } catch (IOException e) {
+            return new BaseResponse("Fail", "We couldn't save the file");
+        }
     }
 }
