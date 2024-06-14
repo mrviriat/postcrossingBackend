@@ -40,9 +40,12 @@ public class ExampleController {
     }
 
     @PostMapping("/uploadImages")
-    public BaseResponse uploadFiles(@RequestPart("files") MultipartFile[] files) {
+    public BaseResponse uploadFiles(
+            @RequestPart("files") MultipartFile[] files,
+            @RequestPart("users") String usersJson
+    ) {
 
-        String url = "http://10.144.55.42:8001/uploadImages";
+        String url = "http://10.144.55.42:8000/uploadImages";
 
         try {
             MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
@@ -56,6 +59,8 @@ public class ExampleController {
                 };
                 body.add("files", byteArrayResource);
             }
+
+            body.add("users", usersJson);
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.MULTIPART_FORM_DATA);
