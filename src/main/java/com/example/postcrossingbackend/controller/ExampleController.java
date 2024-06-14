@@ -1,6 +1,11 @@
 package com.example.postcrossingbackend.controller;
 
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.*;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.BufferedOutputStream;
@@ -8,8 +13,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
 
 @RestController
 @RequestMapping("/postcard")
@@ -39,20 +42,33 @@ public class ExampleController {
     @PostMapping("/uploadImages")
     public BaseResponse uploadFiles(@RequestPart("files") MultipartFile[] files) {
 
-        Path uploadPath = Paths.get("src/main/resources/static/images");
+        String url = "http://10.144.55.42:8001/uploadImages";
 
-        for (MultipartFile file : files) {
-            Path filePath = uploadPath.resolve(file.getOriginalFilename());
+        try {
+            MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
 
-            try (BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(filePath.toFile()))) {
-                bos.write(file.getBytes());
-                bos.flush();
-            } catch (IOException e) {
-                return new BaseResponse("Fail", "Some files could not be saved");
+            for (MultipartFile file : files) {
+                ByteArrayResource byteArrayResource = new ByteArrayResource(file.getBytes()) {
+                    @Override
+                    public String getFilename() {
+                        return file.getOriginalFilename();
+                    }
+                };
+                body.add("files", byteArrayResource);
             }
-        }
 
-        return new BaseResponse("Success", "We save all files");
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+            HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+
+            RestTemplate restTemplate = new RestTemplate();
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
+
+            return new BaseResponse("Success", response.getBody());
+        } catch (IOException e) {
+            return new BaseResponse("Fail", "Unknown error");
+        }
     }
 
 }
