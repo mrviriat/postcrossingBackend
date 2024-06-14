@@ -45,7 +45,7 @@ public class ExampleController {
             @RequestPart("users") String usersJson
     ) {
 
-        String url = "http://10.144.55.42:8000/uploadImages";
+        String url = "http://10.144.55.42:8000/sendImages";
 
         try {
             MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
